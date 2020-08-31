@@ -54,3 +54,19 @@ app.get("/set", (req, res) => {
 app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`)
 });
+
+//log the post request to the console.
+app.post("/urls", (req, res) => {
+console.log(req.body);
+res.send("Ok");
+});
+
+const genRandomString = () => {
+  let output = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  for (let i = 0; i <= 6; i++) {
+    output += characters[Math.floor(Math.random() * 62)]
+  }
+}
+
+console.log(genRandomString())
