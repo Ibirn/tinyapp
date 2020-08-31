@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Ibirn/tinyapp/issues"
   },
-  "homepage": "https://github.com/Ibirn/tinyapp#readme"
+  "homepage": "https://github.com/Ibirn/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
