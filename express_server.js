@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -28,8 +28,16 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', templateVar)
 })
 
-app.get("/urls/new", (req,res) => {
+app.get("/urls/new", (req, res) => {
   res.render("urls_new")
+})
+
+
+app.get("/u/:shortURL", (req, res) => {
+  //let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  req.params;
+  console.log(req.params)
+  res.redirect(urlDatabase[req.params.shortURL])
 })
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -57,16 +65,25 @@ app.get("/fetch", (req, res) => {
 
 //log the post request to the console.
 app.post("/urls", (req, res) => {
-console.log(req.body);
-res.send("Ok");
+  console.log(req.body);
+  let temp = genRandomString()
+  urlDatabase[temp] = req.body.longURL;
+  //res.send("Ok");
+  console.log(urlDatabase)
+  res.redirect(`/urls/${temp}`)
 });
+
+
 
 const genRandomString = () => {
   let output = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (let i = 0; i <= 6; i++) {
-    output += characters[Math.floor(Math.random() * 62)]
+  for (let i = 0; i < 6; i++) {
+    output += characters[Math.floor(Math.random() * 62)];
   }
+  if (urlDatabase[output]){
+    output = '';
+    genRandomString()
+  }
+  return output;
 }
-
-console.log(genRandomString())
