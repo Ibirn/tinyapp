@@ -1,23 +1,36 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+app.set('view engine', 'ejs')
 //can contain html in res.send
 app.get("/", (req, res) => {
   res.send("Heck");
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listnening on port: ${PORT}`)
+  console.log(`The BLACK GATE is open on port: ${PORT}`)
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase)
+});
+
+//abstrraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
+app.get("/urls", (req, res) => {
+  let templateVar = { urls: urlDatabase }
+  res.render('urls_index', templateVar)
+})
+
+app.get("/urls/:shortURL", (req, res) => {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  req.params;
+  console.log(req.params)
+  res.render("urls_show", templateVars);
 });
 
 //curl -i localhost:8080/hello to see headers and html:
