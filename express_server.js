@@ -73,7 +73,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${temp}`)
 });
 
-
+app.post("/urls/:shortURL/delete", (req, res) => {
+  req.params;
+  console.log("This: ", req.params)
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls/')
+})
 
 const genRandomString = () => {
   let output = '';
@@ -83,7 +88,7 @@ const genRandomString = () => {
   }
   if (urlDatabase[output]){
     output = '';
-    genRandomString()
+    genRandomString();
   }
   return output;
 }
