@@ -28,12 +28,14 @@ app.get("/urls.json", (req, res) => {
 
 //abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
 app.get("/urls", (req, res) => {
-  let templateVar = { urls: urlDatabase };
+  let templateVar = { urls: urlDatabase, username: req.cookies["username"] };
   res.render('urls_index', templateVar);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  //mightn eed to at tempvar with username here
+  let templateVar = { username: req.cookies["username"] }
+  res.render("urls_new", templateVar);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -49,7 +51,7 @@ app.post("/login", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
   req.params;
   //console.log("Showing a tinyURL", req.params)
   res.render("urls_show", templateVars);
