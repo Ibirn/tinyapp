@@ -22,46 +22,36 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase)
 });
 
-//abstrraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
+//abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
 app.get("/urls", (req, res) => {
-  let templateVar = { urls: urlDatabase }
-  res.render('urls_index', templateVar)
+  let templateVar = { urls: urlDatabase };
+  res.render('urls_index', templateVar);
 })
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new")
+  res.render("urls_new");
 })
 
-
 app.get("/u/:shortURL", (req, res) => {
-  //let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   req.params;
-  console.log(req.params)
-  res.redirect(urlDatabase[req.params.shortURL])
+  res.redirect(urlDatabase[req.params.shortURL]);
+})
+
+app.post("/urls/:shortURL", (req, res) => {
+  req.params
+  console.log("Edit a tinyURL:\n", req.params, req.params.shortURL, req.body)
+  urlDatabase[req.params.shortURL] = req.body.longURL
+  res.redirect("/urls")
 })
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   req.params;
-  console.log(req.params)
+  console.log("Showing a tinyURL", req.params)
   res.render("urls_show", templateVars);
 });
 
 
-//curl -i localhost:8080/hello to see headers and html:
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <strong>World!</strong></body></hmtl>\n");
-});
-
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`)
-});
-
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`)
-});
 
 //log the post request to the console.
 app.post("/urls", (req, res) => {
@@ -82,7 +72,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 const genRandomString = () => {
   let output = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (let i = 0; i < 6; i++) {
     output += characters[Math.floor(Math.random() * 62)];
   }
@@ -92,3 +82,18 @@ const genRandomString = () => {
   }
   return output;
 }
+
+//curl -i localhost:8080/hello to see headers and html:
+
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <strong>World!</strong></body></hmtl>\n");
+// });
+
+// app.get("/set", (req, res) => {
+//   const a = 1;
+//   res.send(`a = ${a}`)
+// });
+
+// app.get("/fetch", (req, res) => {
+//   res.send(`a = ${a}`)
+// });
