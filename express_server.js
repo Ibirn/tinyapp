@@ -33,7 +33,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  //mightn eed to at tempvar with username here
+  //might n eed to at tempvar with username here
   let templateVar = { username: req.cookies["username"] }
   res.render("urls_new", templateVar);
 });
@@ -49,6 +49,10 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
+app.post("/logout", (req,res) => {
+  res.clearCookie('username');
+  res.redirect("/urls");
+})
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
@@ -74,6 +78,8 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase);
   res.redirect(`/urls/${temp}`);
 });
+
+
 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
