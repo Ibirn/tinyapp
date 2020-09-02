@@ -41,18 +41,18 @@ app.get("/urls.json", (req, res) => {
 
 //abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
 app.get("/urls", (req, res) => {
-  let templateVar = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVar = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
   res.render('urls_index', templateVar);
 });
 
 app.get("/urls/new", (req, res) => {
-  //might n eed to at tempvar with username here
-  let templateVar = { username: req.cookies["username"] }
+  //might need to at tempvar with username here
+  let templateVar = { user: users[req.cookies["user_id"]] }
   res.render("urls_new", templateVar);
 });
 
 app.get("/register", (req, res) => {
-  let templateVar = { username: req.cookies["username"] }
+  let templateVar = { user: users[req.cookies["user_id"]] }
   res.render("urls_reg", templateVar)
 })
 
@@ -60,8 +60,6 @@ app.get("/u/:shortURL", (req, res) => {
   req.params;
   res.redirect(urlDatabase[req.params.shortURL]);
 });
-
-
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
@@ -76,19 +74,20 @@ app.post("/logout", (req,res) => {
 
 app.post("/register", (req, res) => {
   let temp = genRandomString()
+  res.cookie('user_id', temp)
   req.body
-  console.log("captured:\n", req.body)
   users[temp] = {
     id: temp,
     email: req.body.email,
     password: req.body.password
   }
-  console.log(users)
+  //console.log(users)
+  res.redirect("/urls");
 
 })
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
   req.params;
   //console.log("Showing a tinyURL", req.params)
   res.render("urls_show", templateVars);
