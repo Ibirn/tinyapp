@@ -1,15 +1,22 @@
 <header>
   <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #a1be95">
     <a class="navbar-brand" href="/urls" style="color: #ed5752;font-family: Arial, Helvetica, sans-serif;">TinyApp</a>
+<<<<<<< HEAD
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+=======
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+>>>>>>> feature/user-registration
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+
       </div>
     </div>
+<<<<<<< HEAD
     <% if(username === undefined) {%>
     <form class="form-inline" action="/login" method="POST">
       <div class="form-group mb-2">
@@ -22,5 +29,15 @@
       <p style="margin: 1em"> <%= username %> </p>
       <form method="POST" action="/logout"><button type="submit " class="btn btn-sm" style="background-color: #92aac7">Logout</button></form>
       <% } %>
+=======
+    <% if(user === undefined) {%>
+    <a class="nav-item nav-link" href="/login">Login</a>
+    <a class="nav-item nav-link" href="/register">Register</a>
+    <% } else { %>
+    <p style="margin: 1em"> <%= user["email"] %> </p>
+    <form method="POST" action="/logout"><button type="submit " class="btn btn-sm"
+        style="background-color: #92aac7">Logout</button></form>
+    <% } %>
+>>>>>>> feature/user-registration
   </nav>
 </header>

@@ -11,6 +11,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 app.set('view engine', 'ejs');
 
 //can contain html in res.send
@@ -28,14 +41,24 @@ app.get("/urls.json", (req, res) => {
 
 //abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
 app.get("/urls", (req, res) => {
-  let templateVar = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVar = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
   res.render('urls_index', templateVar);
 });
 
 app.get("/urls/new", (req, res) => {
-  //might n eed to at tempvar with username here
-  let templateVar = { username: req.cookies["username"] }
+  //might need to at tempvar with username here
+  let templateVar = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVar);
+});
+
+app.get("/register", (req, res) => {
+  let templateVar = { user: users[req.cookies["user_id"]] };
+  res.render("urls_reg", templateVar);
+});
+
+app.get("/login", (req, res) => {
+  let templateVar = { user: users[req.cookies["user_id"]] };
+  res.render("urls_login", templateVar);
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -44,24 +67,56 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  console.log("Params body\n", req.body);
-  res.redirect('/urls');
+  console.log("Params body \n", req.body);
+  res.clearCookie('user_id');
+  if (checkInUse(req.body.email)) {
+    let check = getID(req.body.email, req.body.password);
+    if (check) {
+      res.cookie('user_id', getID(req.body.email, req.body.password));
+      return res.redirect("urls");
+    }
+    res.statusCode = 403;
+    return res.send('error ' + res.statusCode);
+  } else {
+    res.statusCode = 403;
+    return res.send('error ' + res.statusCode);
+  }
 });
 
-app.post("/logout", (req,res) => {
-  res.clearCookie('username');
+app.post("/logout", (req, res) => {
+  res.clearCookie('user_id');
   res.redirect("/urls");
-})
+});
+
+app.post("/register", (req, res) => {
+  let temp = genRandomString();
+  res.cookie('user_id', temp);
+  req.body;
+  console.log("em:", req.body.email, "ps:", req.body.password);
+  if (req.body.email === '' || req.body.password === '') {
+    res.statusCode = 400;
+    return res.send('error ' + res.statusCode);
+  } else if (checkInUse(req.body.email)) {
+    res.statusCode = 400;
+    return res.send('error ' + res.statusCode);
+  } else {
+    users[temp] = {
+      id: temp,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.redirect("/urls");
+  }
+});
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
   req.params;
   //console.log("Showing a tinyURL", req.params)
   res.render("urls_show", templateVars);
 });
 
-//if anything goes wrong move this one up by one
+//if anything goes wrong move this one
 app.post("/urls/:shortURL", (req, res) => {
   req.params;
   //console.log("Edit a tinyURL:\n", req.params, req.params.shortURL, req.body)
@@ -79,16 +134,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${temp}`);
 });
 
-
-
-
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
   console.log("This: ", req.params);
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
-
 
 const genRandomString = () => {
   let output = '';
@@ -103,6 +154,25 @@ const genRandomString = () => {
   return output;
 };
 
+const checkInUse = email => {
+  for (const key in users) {
+    if (email === users[key]["email"]) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const getID = (email, password) => {
+  for (const key in users) {
+    if (email === users[key]["email"]) {
+      if (password === users[key]["password"]) {
+        return users[key]["id"];
+      }
+    }
+  }
+  return false;
+};
 //curl -i localhost:8080/hello to see headers and html:
 
 // app.get("/hello", (req, res) => {
