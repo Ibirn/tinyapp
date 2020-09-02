@@ -11,6 +11,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 app.set('view engine', 'ejs');
 
 //can contain html in res.send
@@ -33,15 +46,22 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  //mightn eed to at tempvar with username here
+  //might n eed to at tempvar with username here
   let templateVar = { username: req.cookies["username"] }
   res.render("urls_new", templateVar);
 });
+
+app.get("/register", (req, res) => {
+  let templateVar = { username: req.cookies["username"] }
+  res.render("urls_reg", templateVar)
+})
 
 app.get("/u/:shortURL", (req, res) => {
   req.params;
   res.redirect(urlDatabase[req.params.shortURL]);
 });
+
+
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
@@ -49,6 +69,23 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
+app.post("/logout", (req,res) => {
+  res.clearCookie('username');
+  res.redirect("/urls");
+})
+
+app.post("/register", (req, res) => {
+  let temp = genRandomString()
+  req.body
+  console.log("captured:\n", req.body)
+  users[temp] = {
+    id: temp,
+    email: req.body.email,
+    password: req.body.password
+  }
+  console.log(users)
+
+})
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"] };
@@ -57,7 +94,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//if anything goes wrong move this one up by one
+//if anything goes wrong move this one
 app.post("/urls/:shortURL", (req, res) => {
   req.params;
   //console.log("Edit a tinyURL:\n", req.params, req.params.shortURL, req.body)
@@ -75,14 +112,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${temp}`);
 });
 
-
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
   console.log("This: ", req.params);
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
 });
-
 
 const genRandomString = () => {
   let output = '';
