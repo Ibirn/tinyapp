@@ -68,7 +68,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req,res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect("/urls");
 })
 
@@ -76,14 +76,21 @@ app.post("/register", (req, res) => {
   let temp = genRandomString()
   res.cookie('user_id', temp)
   req.body
-  users[temp] = {
-    id: temp,
-    email: req.body.email,
-    password: req.body.password
+  console.log("em:", req.body.email, "ps:", req.body.password)
+  if (req.body.email === '' || req.body.password === '') {
+    //console.log('made it')
+    res.statusCode = 400;
+  } else if (checkInUse(req.body.email)) {
+    //console.log('in use', users)
+    res.statusCode = 400;
+  } else {
+    users[temp] = {
+      id: temp,
+      email: req.body.email,
+      password: req.body.password
+    }
+    res.redirect("/urls");
   }
-  //console.log(users)
-  res.redirect("/urls");
-
 })
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -131,6 +138,14 @@ const genRandomString = () => {
   return output;
 };
 
+const checkInUse = email => {
+  for (const key in users) {
+    if (email === users[key]["email"]) {
+      return true;
+    }
+  }
+  return false;
+}
 //curl -i localhost:8080/hello to see headers and html:
 
 // app.get("/hello", (req, res) => {
