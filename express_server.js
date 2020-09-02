@@ -11,18 +11,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
+};
 
 app.set('view engine', 'ejs');
 
@@ -47,19 +47,19 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   //might need to at tempvar with username here
-  let templateVar = { user: users[req.cookies["user_id"]] }
+  let templateVar = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVar);
 });
 
 app.get("/register", (req, res) => {
-  let templateVar = { user: users[req.cookies["user_id"]] }
-  res.render("urls_reg", templateVar)
-})
+  let templateVar = { user: users[req.cookies["user_id"]] };
+  res.render("urls_reg", templateVar);
+});
 
-app.get("/login",(req, res) => {
-  let templateVar = { user: users[req.cookies["user_id"]] }
-  res.render("urls_login", templateVar)
-})
+app.get("/login", (req, res) => {
+  let templateVar = { user: users[req.cookies["user_id"]] };
+  res.render("urls_login", templateVar);
+});
 
 app.get("/u/:shortURL", (req, res) => {
   req.params;
@@ -68,46 +68,46 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
   console.log("Params body \n", req.body);
-  if(checkInUse(req.body.email)){
-
-    let check = getID(req.body.email, req.body.password)
-    if(check){
+  res.clearCookie('user_id');
+  if (checkInUse(req.body.email)) {
+    let check = getID(req.body.email, req.body.password);
+    if (check) {
       res.cookie('user_id', getID(req.body.email, req.body.password));
       return res.redirect("urls");
     }
     res.statusCode = 403;
-    return res.send('error ' + res.statusCode)
+    return res.send('error ' + res.statusCode);
   } else {
     res.statusCode = 403;
-    return res.send('error ' + res.statusCode)
+    return res.send('error ' + res.statusCode);
   }
 });
 
-app.post("/logout", (req,res) => {
+app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect("/urls");
-})
+});
 
 app.post("/register", (req, res) => {
-  let temp = genRandomString()
-  res.cookie('user_id', temp)
-  req.body
-  console.log("em:", req.body.email, "ps:", req.body.password)
+  let temp = genRandomString();
+  res.cookie('user_id', temp);
+  req.body;
+  console.log("em:", req.body.email, "ps:", req.body.password);
   if (req.body.email === '' || req.body.password === '') {
     res.statusCode = 400;
-    return res.send('error ' + res.statusCode)
+    return res.send('error ' + res.statusCode);
   } else if (checkInUse(req.body.email)) {
     res.statusCode = 400;
-    return res.send('error ' + res.statusCode)
+    return res.send('error ' + res.statusCode);
   } else {
     users[temp] = {
       id: temp,
       email: req.body.email,
       password: req.body.password
-    }
+    };
     res.redirect("/urls");
   }
-})
+});
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
@@ -161,22 +161,18 @@ const checkInUse = email => {
     }
   }
   return false;
-}
+};
 
 const getID = (email, password) => {
-  console.log("inner 1: ", email, password)
   for (const key in users) {
-    console.log("inner 1.5: ", users[key])
-    if (email === users[key]["email"]){
-      console.log("inner2: ", users[key]["email"])
-      if (password === users[key]["password"]){
-        console.log("inner 3: ", users[key]["email"], users[key]["password"])
+    if (email === users[key]["email"]) {
+      if (password === users[key]["password"]) {
         return users[key]["id"];
       }
     }
   }
   return false;
-}
+};
 //curl -i localhost:8080/hello to see headers and html:
 
 // app.get("/hello", (req, res) => {

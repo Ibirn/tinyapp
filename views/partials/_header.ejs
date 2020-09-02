@@ -1,28 +1,24 @@
 <header>
   <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #a1be95">
     <a class="navbar-brand" href="/urls" style="color: #ed5752;font-family: Arial, Helvetica, sans-serif;">TinyApp</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <a class="nav-item nav-link" href="/login">Login</a>
-        <a class="nav-item nav-link" href="/register">Register</a>
+
       </div>
     </div>
     <% if(user === undefined) {%>
-    <form class="form-inline" action="/login" method="POST">
-      <div class="form-group mb-2">
-        <label for="username">Email:</label>
-        <input class="form-control" type="text" name="username" style="width: 200px; margin: 1em">
-        <button type="submit" class="btn btn-sm" style="background-color: #92aac7">Login</button>
-      </div>
-    </form>
+    <a class="nav-item nav-link" href="/login">Login</a>
+    <a class="nav-item nav-link" href="/register">Register</a>
     <% } else { %>
-      <p style="margin: 1em"> <%= user["email"] %> </p>
-      <form method="POST" action="/logout"><button type="submit " class="btn btn-sm" style="background-color: #92aac7">Logout</button></form>
-      <% } %>
+    <p style="margin: 1em"> <%= user["email"] %> </p>
+    <form method="POST" action="/logout"><button type="submit " class="btn btn-sm"
+        style="background-color: #92aac7">Logout</button></form>
+    <% } %>
   </nav>
 </header>
