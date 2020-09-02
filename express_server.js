@@ -7,8 +7,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -35,18 +35,20 @@ app.listen(PORT, () => {
   console.log(`The BLACK GATE is open on port: ${PORT}`);
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
 
 //abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
 app.get("/urls", (req, res) => {
-  let templateVar = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
+  console.log("urls cookie id: ", req.cookies["user_id"])
+  console.log("database:", urlDatabase)
+  let templateVar = { urls: urlsForID(req.cookies["user_id"]), user: users[req.cookies["user_id"]] };
   res.render('urls_index', templateVar);
 });
 
 app.get("/urls/new", (req, res) => {
   //might need to at tempvar with username here
+  if(!users[req.cookies["user_id"]]){
+    return res.redirect("/login")
+  }
   let templateVar = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVar);
 });
@@ -63,11 +65,12 @@ app.get("/login", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   req.params;
-  res.redirect(urlDatabase[req.params.shortURL]);
+  //console.log("u/:", req.params.shortURL)
+  res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
 });
 
 app.post("/login", (req, res) => {
-  console.log("Params body \n", req.body);
+  //console.log("Params body \n", req.body);
   res.clearCookie('user_id');
   if (checkInUse(req.body.email)) {
     let check = getID(req.body.email, req.body.password);
@@ -92,7 +95,7 @@ app.post("/register", (req, res) => {
   let temp = genRandomString();
   res.cookie('user_id', temp);
   req.body;
-  console.log("em:", req.body.email, "ps:", req.body.password);
+  //console.log("em:", req.body.email, "ps:", req.body.password);
   if (req.body.email === '' || req.body.password === '') {
     res.statusCode = 400;
     return res.send('error ' + res.statusCode);
@@ -110,7 +113,7 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies["user_id"]] };
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.cookies["user_id"]] };
   req.params;
   //console.log("Showing a tinyURL", req.params)
   res.render("urls_show", templateVars);
@@ -120,26 +123,40 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   req.params;
   //console.log("Edit a tinyURL:\n", req.params, req.params.shortURL, req.body)
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  console.log("post check:", req.body, "params:", req.params)
+  urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
   res.redirect("/urls");
 });
 
 //log the post request to the console.
 app.post("/urls", (req, res) => {
-  console.log(req.body);
   let temp = genRandomString();
-  urlDatabase[temp] = req.body.longURL;
-  //res.send("Ok");
-  console.log(urlDatabase);
+  urlDatabase[temp] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"]
+  }
   res.redirect(`/urls/${temp}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
-  console.log("This: ", req.params);
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]){
+      console.log("This: ", req.params);
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
+  } else {
+    res.statusCode = 401;
+    return res.send('Error ' + res.statusCode);
+  }
+  
+
 });
+
+
+
+
+
+
 
 const genRandomString = () => {
   let output = '';
@@ -173,6 +190,16 @@ const getID = (email, password) => {
   }
   return false;
 };
+
+const urlsForID = id => {
+  const ownedURLS = {};
+  for (const key in urlDatabase) {
+    if (id === urlDatabase[key]["userID"]) {
+      ownedURLS[key] = urlDatabase[key]
+    }
+  }
+  return ownedURLS;
+}
 //curl -i localhost:8080/hello to see headers and html:
 
 // app.get("/hello", (req, res) => {
@@ -182,6 +209,10 @@ const getID = (email, password) => {
 // app.get("/set", (req, res) => {
 //   const a = 1;
 //   res.send(`a = ${a}`)
+// });
+
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
 // });
 
 // app.get("/fetch", (req, res) => {
