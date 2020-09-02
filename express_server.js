@@ -56,15 +56,31 @@ app.get("/register", (req, res) => {
   res.render("urls_reg", templateVar)
 })
 
+app.get("/login",(req, res) => {
+  let templateVar = { user: users[req.cookies["user_id"]] }
+  res.render("urls_login", templateVar)
+})
+
 app.get("/u/:shortURL", (req, res) => {
   req.params;
   res.redirect(urlDatabase[req.params.shortURL]);
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  console.log("Params body\n", req.body);
-  res.redirect('/urls');
+  console.log("Params body \n", req.body);
+  if(checkInUse(req.body.email)){
+
+    let check = getID(req.body.email, req.body.password)
+    if(check){
+      res.cookie('user_id', getID(req.body.email, req.body.password));
+      return res.redirect("urls");
+    }
+    res.statusCode = 403;
+    return res.send('error ' + res.statusCode)
+  } else {
+    res.statusCode = 403;
+    return res.send('error ' + res.statusCode)
+  }
 });
 
 app.post("/logout", (req,res) => {
@@ -78,11 +94,11 @@ app.post("/register", (req, res) => {
   req.body
   console.log("em:", req.body.email, "ps:", req.body.password)
   if (req.body.email === '' || req.body.password === '') {
-    //console.log('made it')
     res.statusCode = 400;
+    return res.send('error ' + res.statusCode)
   } else if (checkInUse(req.body.email)) {
-    //console.log('in use', users)
     res.statusCode = 400;
+    return res.send('error ' + res.statusCode)
   } else {
     users[temp] = {
       id: temp,
@@ -142,6 +158,21 @@ const checkInUse = email => {
   for (const key in users) {
     if (email === users[key]["email"]) {
       return true;
+    }
+  }
+  return false;
+}
+
+const getID = (email, password) => {
+  console.log("inner 1: ", email, password)
+  for (const key in users) {
+    console.log("inner 1.5: ", users[key])
+    if (email === users[key]["email"]){
+      console.log("inner2: ", users[key]["email"])
+      if (password === users[key]["password"]){
+        console.log("inner 3: ", users[key]["email"], users[key]["password"])
+        return users[key]["id"];
+      }
     }
   }
   return false;
