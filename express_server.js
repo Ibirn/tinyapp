@@ -2,10 +2,13 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['I am the very model of a scientist salarian',"I've studies species Turian, Asari, and Batarian","I'm quite good at genetics(as a subset of biology", "because I am a expert (which I know is a tautology)" ]
+}))
 
 //TRIAL DATABASES-------------------------------------------------------------------------------
 
@@ -46,7 +49,7 @@ app.set('view engine', 'ejs');
 
 //can contain html in res.send
 app.get("/", (req, res) => {
-  if(users[req.cookies["user_id"]]){
+  if(users[req.session.user_id]){
     res.redirect("/urls");
   } else {
     res.redirect("/login");
@@ -60,47 +63,46 @@ app.listen(PORT, () => {
 
 //abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file. adding viewcount
 app.get("/urls", (req, res) => {
-  // console.log("urls cookie id: ", req.cookies["user_id"]);
   // console.log("database:", urlDatabase);
   // console.log("views:", viewCount);
   console.log(users)
-  if (users[req.cookies["user_id"]]) {
-    let templateVar = { urls: urlsForID(req.cookies["user_id"]), user: users[req.cookies["user_id"]], viewCount };
+  if (users[req.session.user_id]) {
+    let templateVar = { urls: urlsForID(req.session.user_id), user: users[req.session.user_id], viewCount };
     res.render('urls_index', templateVar);
   } else {
-    res.cookie('errorLog', 001)
+    req.session.errorLog = 001
     res.redirect("/error")
   }
 
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!users[req.cookies["user_id"]]) {
+  if (!users[req.session.user_id]) {
     return res.redirect("/login");
   }
-  let templateVar = { user: users[req.cookies["user_id"]] };
+  let templateVar = { user: users[req.session.user_id] };
   res.render("urls_new", templateVar);
 });
 
 app.get("/error", (req, res) => {
-  let templateVar = { user: users[req.cookies["user_id"]], error:errorLog[req.cookies.errorLog]}
+  let templateVar = { user: users[req.session.user_id], error:errorLog[req.session.errorLog]}
   res.render("urls_error", templateVar);
 })
 
 app.get("/register", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
+  if (users[req.session.user_id]) {
     return res.redirect("/urls")
   } else {
-    let templateVar = { user: users[req.cookies["user_id"]] };
+    let templateVar = { user: users[req.session.user_id] };
     res.render("urls_reg", templateVar);
   }
 });
 
 app.get("/login", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
+  if (users[req.session.user_id]) {
     return res.redirect("/urls")
   } else {
-    let templateVar = { user: users[req.cookies["user_id"]] };
+    let templateVar = { user: users[req.session.user_id] };
     res.render("urls_login", templateVar);
   }
 });
@@ -109,7 +111,7 @@ app.get("/u/:shortURL", (req, res) => {
   req.params;
   if (!urlDatabase[req.params.shortURL]){
     res.statusCode = 404
-    res.cookie('errorLog', 404)
+    req.session.errorLog = res.statusCode
     res.redirect("/error")
   }
   viewCount[req.params.shortURL] += 1
@@ -121,32 +123,32 @@ app.post("/login", (req, res) => {
   if (checkInUse(req.body.email)) {
     let check = getID(req.body.email, req.body.password);
     if (check) {
-      res.cookie('user_id', getID(req.body.email, req.body.password));
+      req.session.user_id = getID(req.body.email, req.body.password);
       return res.redirect("urls");
     }
-    res.cookie('errorLog', 002)
+    req.session.errorLog = 002
     res.redirect("/error")
   } else {
-    res.cookie('errorLog', 002)
+    req.session.errorLog =002
     res.redirect("/error")
   }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/urls");
 });
 
 app.post("/register", (req, res) => {
   let temp = genRandomString();
-  res.cookie('user_id', temp);
+  req.session.user_id = temp;
   req.body;
   if (req.body.email === '' || req.body.password === '') {
     res.statusCode = 400
-    res.cookie('errorLog', 400)
+    req.session.errorLog = 400
     res.redirect("/error")
   } else if (checkInUse(req.body.email)) {
-    res.cookie('errorLog', 003)
+    req.session.errorLog = 003
     res.redirect("/error")
   } else {
     users[temp] = {
@@ -162,15 +164,15 @@ app.get("/urls/:shortURL", (req, res) => {
   req.params;
   if (!urlDatabase[req.params.shortURL]) {
     res.statusCode = 404
-    res.cookie('errorLog', 404)
+    req.session.errorLog = 404
     res.redirect("/error")
-  } else if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
-    let templateVar = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.cookies["user_id"]] };
+  } else if (req.session.user_id === urlDatabase[req.params.shortURL]["userID"]) {
+    let templateVar = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.session.user_id] };
     req.params;
     res.render("urls_show", templateVar);
   } else {
     res.statusCode = 403
-    res.cookie('errorLog', 403)
+    req.session.errorLog = 403
     res.redirect("/error")
   }
 });
@@ -178,13 +180,13 @@ app.get("/urls/:shortURL", (req, res) => {
 //if anything goes wrong move this one FOR EDITING TINYURL
 app.post("/urls/:shortURL", (req, res) => {
   req.params;
-  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
+  if (req.session.user_id === urlDatabase[req.params.shortURL]["userID"]) {
     viewCount[req.params.shortURL] = 0; //viewcount
     urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
     res.redirect("/urls");
   } else {
     res.statusCode = 401
-    res.cookie('errorLog', 401)
+    req.session.errorLog = 401
     res.redirect("/error")
   }
 });
@@ -198,7 +200,7 @@ app.post("/urls", (req, res) => {
   }
   urlDatabase[temp] = {
     longURL: req.body.longURL,
-    userID: req.cookies["user_id"]
+    userID: req.session.user_id
   };
   viewCount[temp] = 0;
   console.log(urlDatabase, users)
@@ -207,14 +209,14 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
-  console.log(req.cookies["user_id"], urlDatabase[req.params.shortURL], req.params)
-  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
+  console.log(req.session.user_id, urlDatabase[req.params.shortURL], req.params)
+  if (req.session.user_id === urlDatabase[req.params.shortURL]["userID"]) {
     //console.log("Delete This: ", req.params);
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
-  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortURL]["userID"]){
+  } else if (req.session.user_id !== urlDatabase[req.params.shortURL]["userID"]){
     res.statusCode = 401
-    res.cookie('errorLog', res.statusCode)
+    req.session.errorLog = 401
     res.redirect("/error")
   }
 });
