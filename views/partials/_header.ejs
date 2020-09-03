@@ -1,24 +1,24 @@
 <header>
-  <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #a1be95">
-    <a class="navbar-brand" href="/urls" style="color: #ed5752;font-family: Arial, Helvetica, sans-serif;">TinyApp</a>
+  <nav class="navbar navbar-expand-md navbar-dark bg-success" style="background-image: linear-gradient(to bottom right, #ff8883, #ffc2bb)">
+    <a class="navbar-brand" href="/urls" style="color: #FFFFFF"><strong>TinyApp</strong></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <a class="nav-item nav-link" href="/urls" style="color: #5a789c">My URLs</a>
+        <a class="nav-item nav-link" href="/urls/new" style="color: #5a789c">Create New URL</a>
 
       </div>
     </div>
     <% if(user === undefined) {%>
-    <a class="nav-item nav-link" style="color: #4a6a91" href="/login">Login</a>
-    <a class="nav-item nav-link" style="color: #4a6a91" href="/register">Register</a>
+    <a class="nav-item nav-link" style="color: #5a789c" href="/login">Login</a>
+    <a class="nav-item nav-link" style="color: #5a789c" href="/register">Register</a>
     <% } else { %>
     <p style="margin: 1em"> <%= user["email"] %> </p>
     <form method="POST" action="/logout"><button type="submit " class="btn btn-sm"
-        style="background-color: #92aac7">Logout</button></form>
+        style="background-color: #5d7ca3; color: #FFFFFF;">Logout</button></form>
     <% } %>
   </nav>
 </header>

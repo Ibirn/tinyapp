@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+//TRIAL DATABASES-------------------------------------------------------------------------------------------
+
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -24,34 +26,58 @@ const users = {
   }
 };
 
+const viewCount = {}
+
+const errorLog = {
+  401: "You do not have permission.",
+  001: "We know you want to get places, but please log in or register first."
+}
+
+
+//PRODUCTION CODE--------------------------------------------------------------------------------------------
 app.set('view engine', 'ejs');
 
 //can contain html in res.send
 app.get("/", (req, res) => {
-  res.send("Heck");
+  if(users[req.cookies["user_id"]]){
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+  
 });
 
 app.listen(PORT, () => {
   console.log(`The BLACK GATE is open on port: ${PORT}`);
 });
 
-
-//abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file.
+//abstraction of the urlDatabase into templateVar to give the whole object a callable key in the views ejs file. adding viewcount
 app.get("/urls", (req, res) => {
-  console.log("urls cookie id: ", req.cookies["user_id"])
-  console.log("database:", urlDatabase)
-  let templateVar = { urls: urlsForID(req.cookies["user_id"]), user: users[req.cookies["user_id"]] };
-  res.render('urls_index', templateVar);
+  // console.log("urls cookie id: ", req.cookies["user_id"]);
+  // console.log("database:", urlDatabase);
+  // console.log("views:", viewCount);
+  if (users[req.cookies["user_id"]]) {
+    let templateVar = { urls: urlsForID(req.cookies["user_id"]), user: users[req.cookies["user_id"]], viewCount };
+    res.render('urls_index', templateVar);
+  } else {
+    res.cookie('errorLog', 001)
+    res.redirect("/error")
+  }
+
 });
 
 app.get("/urls/new", (req, res) => {
-  //might need to at tempvar with username here
-  if(!users[req.cookies["user_id"]]){
-    return res.redirect("/login")
+  if (!users[req.cookies["user_id"]]) {
+    return res.redirect("/login");
   }
   let templateVar = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVar);
 });
+
+app.get("/error", (req, res) => {
+  let templateVar = { user: users[req.cookies["user_id"]], error:errorLog[req.cookies.errorLog]}
+  res.render("urls_error", templateVar);
+})
 
 app.get("/register", (req, res) => {
   let templateVar = { user: users[req.cookies["user_id"]] };
@@ -65,13 +91,13 @@ app.get("/login", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   req.params;
-  //console.log("u/:", req.params.shortURL)
+  console.log("u/:", req.params.shortURL)
+  viewCount[req.params.shortURL] += 1
   res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
 });
 
 app.post("/login", (req, res) => {
   //console.log("Params body \n", req.body);
-  res.clearCookie('user_id');
   if (checkInUse(req.body.email)) {
     let check = getID(req.body.email, req.body.password);
     if (check) {
@@ -95,7 +121,6 @@ app.post("/register", (req, res) => {
   let temp = genRandomString();
   res.cookie('user_id', temp);
   req.body;
-  //console.log("em:", req.body.email, "ps:", req.body.password);
   if (req.body.email === '' || req.body.password === '') {
     res.statusCode = 400;
     return res.send('error ' + res.statusCode);
@@ -113,50 +138,67 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.cookies["user_id"]] };
   req.params;
-  //console.log("Showing a tinyURL", req.params)
-  res.render("urls_show", templateVars);
+  console.log("p: ", req.params, "c: ", req.cookies, "id: ",)
+  if (!urlDatabase[req.params.shortURL]) {
+    res.cookie('errorLog', 401)
+    res.redirect("/error")
+    console.log('logged in, do not own')
+  } else if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
+    let templateVar = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.cookies["user_id"]] };
+    req.params;
+    //console.log("Showing a tinyURL", req.params)
+    res.render("urls_show", templateVar);
+  } else {
+    res.cookie('errorLog', 401)
+    res.redirect("/error")
+  }
 });
 
-//if anything goes wrong move this one
+//if anything goes wrong move this one FOR EDITING TINYURL
 app.post("/urls/:shortURL", (req, res) => {
   req.params;
-  //console.log("Edit a tinyURL:\n", req.params, req.params.shortURL, req.body)
-  console.log("post check:", req.body, "params:", req.params)
-  urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
-  res.redirect("/urls");
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
+    viewCount[req.params.shortURL] = 0; //viewcount
+    urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.statusCode = 401;
+    return res.send('Error ' + res.statusCode);
+  }
 });
 
 //log the post request to the console.
 app.post("/urls", (req, res) => {
   let temp = genRandomString();
+  //console.log(req.body.longURL.slice(0,7))
+  if(!(req.body.longURL.slice(0,7) === 'http://')){
+    let format = 'http://'
+    req.body.longURL = format.concat(req.body.longURL);
+  }
   urlDatabase[temp] = {
     longURL: req.body.longURL,
     userID: req.cookies["user_id"]
-  }
+  };
+  //adding viewcount
+  viewCount[temp] = 0;
+  //end
   res.redirect(`/urls/${temp}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
-  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]){
-      console.log("This: ", req.params);
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
+    //console.log("Delete This: ", req.params);
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
   } else {
     res.statusCode = 401;
     return res.send('Error ' + res.statusCode);
   }
-  
-
 });
 
-
-
-
-
-
+// FUNCTIONS--------------------------------------------------------------------------------------------------------
 
 const genRandomString = () => {
   let output = '';
@@ -195,11 +237,12 @@ const urlsForID = id => {
   const ownedURLS = {};
   for (const key in urlDatabase) {
     if (id === urlDatabase[key]["userID"]) {
-      ownedURLS[key] = urlDatabase[key]
+      ownedURLS[key] = urlDatabase[key];
     }
   }
   return ownedURLS;
-}
+};
+
 //curl -i localhost:8080/hello to see headers and html:
 
 // app.get("/hello", (req, res) => {

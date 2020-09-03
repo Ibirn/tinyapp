@@ -7,31 +7,52 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>TinyApp Registration</title>
+  <style>
+    .block {
+      max-width: 340px;
+      min-height: 240px;
+      padding: 10px;
+      margin: auto;
+      border-radius: 5px;
+      border: solid 1px #ccc;
+      background: #ebebeb;
+    }
+
+    form {
+      margin: 0 30px;
+    }
+
+    button {
+      width: auto;
+      padding: 10px;
+      margin: 10px auto;
+    }
+  </style>
 </head>
 
 <body>
   <header>
     <% include /partials/_header %>
   </header>
-  <div style="text-align: center;"><h2>Register for TinyApp</h2></div>
+  <br>
 
-  <div class="card text-center">
-    <div class="card-header"></div>
-    <div class="card-body">
+  <div class="block">
+    <h2 style="text-align: center;">Register for TinyApp</h2>
+    <hr>
+
       <form class="form-inline" action="/register" method="POST">
-        <div class="form-group mb-2 mx-auto">
-          <label for="email">Email:</label>
-          <input class="form-control" type="email" name="email" placeholder="Email"/>
-          <label for="password">Password:</label>
-          <input class="form-control" type="password" name="password" placeholder="Password" />
-          <button type="submit" class="btn" style="background-color: #92aac7">Register</button>
+        <div class="form-group mb-2 mx-auto container">
+          <label for="email"></label>
+          <input class="form-control" type="email" name="email" placeholder="Email" required/>
+          <label for="password"></label>
+          <input class="form-control" type="password" name="password" placeholder="Password" required/>
+          <button type="submit" class="btn" style="background-color: #5d7ca3; color :white">Register</button>
         </div>
       </form>
-    </div>
-    <div class="card-footer text-muted"></div>
+
   </div>
   <div class="btn-block">
-    <p style="text-align: center;">By clicking Register, you agree on our <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Privacy Policy</a> for TinyApp.</p>
+    <p style="text-align: center; font-size: smaller;">By clicking Register, you agree to our <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Privacy Policy</a> for TinyApp.</p>
 
     
   </div>
