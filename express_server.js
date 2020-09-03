@@ -3,10 +3,11 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-//TRIAL DATABASES-------------------------------------------------------------------------------------------
+//TRIAL DATABASES-------------------------------------------------------------------------------
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -29,7 +30,7 @@ const users = {
 const viewCount = {}
 
 const errorLog = {
-  400: {id: "Error 400", msg:"Something's not right."},
+  400: {id: "Error 400", msg:"Bad request."},
   401: {id: "Error 401", msg:"You do not have permission to edit this link."},
   403: {id: "Error 403", msg:"You do not have authorization."},
   404: {id: "Error 404", msg:"Not here, chief."},
@@ -40,7 +41,7 @@ const errorLog = {
 }
 
 
-//PRODUCTION CODE--------------------------------------------------------------------------------------------
+//PRODUCTION CODE---------------------------------------------------------------------
 app.set('view engine', 'ejs');
 
 //can contain html in res.send
@@ -62,6 +63,7 @@ app.get("/urls", (req, res) => {
   // console.log("urls cookie id: ", req.cookies["user_id"]);
   // console.log("database:", urlDatabase);
   // console.log("views:", viewCount);
+  console.log(users)
   if (users[req.cookies["user_id"]]) {
     let templateVar = { urls: urlsForID(req.cookies["user_id"]), user: users[req.cookies["user_id"]], viewCount };
     res.render('urls_index', templateVar);
@@ -86,13 +88,21 @@ app.get("/error", (req, res) => {
 })
 
 app.get("/register", (req, res) => {
-  let templateVar = { user: users[req.cookies["user_id"]] };
-  res.render("urls_reg", templateVar);
+  if (users[req.cookies["user_id"]]) {
+    return res.redirect("/urls")
+  } else {
+    let templateVar = { user: users[req.cookies["user_id"]] };
+    res.render("urls_reg", templateVar);
+  }
 });
 
 app.get("/login", (req, res) => {
-  let templateVar = { user: users[req.cookies["user_id"]] };
-  res.render("urls_login", templateVar);
+  if (users[req.cookies["user_id"]]) {
+    return res.redirect("/urls")
+  } else {
+    let templateVar = { user: users[req.cookies["user_id"]] };
+    res.render("urls_login", templateVar);
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -114,11 +124,9 @@ app.post("/login", (req, res) => {
       res.cookie('user_id', getID(req.body.email, req.body.password));
       return res.redirect("urls");
     }
-    console.log('here1')
     res.cookie('errorLog', 002)
     res.redirect("/error")
   } else {
-    console.log('here2')
     res.cookie('errorLog', 002)
     res.redirect("/error")
   }
@@ -144,7 +152,7 @@ app.post("/register", (req, res) => {
     users[temp] = {
       id: temp,
       email: req.body.email,
-      password: req.body.password
+      password: bcrypt.hashSync(req.body.password, 10)
     };
     res.redirect("/urls");
   }
@@ -211,7 +219,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-// FUNCTIONS--------------------------------------------------------------------------------------------------------
+// FUNCTIONS----------------------------------------------------------------------------
 
 const genRandomString = () => {
   let output = '';
@@ -236,9 +244,11 @@ const checkInUse = email => {
 };
 
 const getID = (email, password) => {
+
   for (const key in users) {
     if (email === users[key]["email"]) {
-      if (password === users[key]["password"]) {
+
+      if (bcrypt.compareSync(password, users[key]["password"])) {
         return users[key]["id"];
       }
     }
