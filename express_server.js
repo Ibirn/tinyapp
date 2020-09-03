@@ -29,8 +29,14 @@ const users = {
 const viewCount = {}
 
 const errorLog = {
-  401: "You do not have permission.",
-  001: "We know you want to get places, but please log in or register first."
+  400: {id: "Error 400", msg:"Something's not right."},
+  401: {id: "Error 401", msg:"You do not have permission to edit this link."},
+  403: {id: "Error 403", msg:"You do not have authorization."},
+  404: {id: "Error 404", msg:"Not here, chief."},
+
+  003: {id: "E-mail already registered", msg:"We're already friends, bud."},
+  002: {id: "Bad password/email combination.", msg:"Please double-check your spelling."},
+  001: {id: '', msg:"We know you want to get places, but please log in or register first."}
 }
 
 
@@ -91,7 +97,11 @@ app.get("/login", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   req.params;
-  console.log("u/:", req.params.shortURL)
+  if (!urlDatabase[req.params.shortURL]){
+    res.statusCode = 404
+    res.cookie('errorLog', 404)
+    res.redirect("/error")
+  }
   viewCount[req.params.shortURL] += 1
   res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
 });
@@ -104,11 +114,13 @@ app.post("/login", (req, res) => {
       res.cookie('user_id', getID(req.body.email, req.body.password));
       return res.redirect("urls");
     }
-    res.statusCode = 403;
-    return res.send('error ' + res.statusCode);
+    console.log('here1')
+    res.cookie('errorLog', 002)
+    res.redirect("/error")
   } else {
-    res.statusCode = 403;
-    return res.send('error ' + res.statusCode);
+    console.log('here2')
+    res.cookie('errorLog', 002)
+    res.redirect("/error")
   }
 });
 
@@ -122,11 +134,12 @@ app.post("/register", (req, res) => {
   res.cookie('user_id', temp);
   req.body;
   if (req.body.email === '' || req.body.password === '') {
-    res.statusCode = 400;
-    return res.send('error ' + res.statusCode);
+    res.statusCode = 400
+    res.cookie('errorLog', 400)
+    res.redirect("/error")
   } else if (checkInUse(req.body.email)) {
-    res.statusCode = 400;
-    return res.send('error ' + res.statusCode);
+    res.cookie('errorLog', 003)
+    res.redirect("/error")
   } else {
     users[temp] = {
       id: temp,
@@ -139,18 +152,17 @@ app.post("/register", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   req.params;
-  console.log("p: ", req.params, "c: ", req.cookies, "id: ",)
   if (!urlDatabase[req.params.shortURL]) {
-    res.cookie('errorLog', 401)
+    res.statusCode = 404
+    res.cookie('errorLog', 404)
     res.redirect("/error")
-    console.log('logged in, do not own')
   } else if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
     let templateVar = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"], user: users[req.cookies["user_id"]] };
     req.params;
-    //console.log("Showing a tinyURL", req.params)
     res.render("urls_show", templateVar);
   } else {
-    res.cookie('errorLog', 401)
+    res.statusCode = 403
+    res.cookie('errorLog', 403)
     res.redirect("/error")
   }
 });
@@ -163,38 +175,39 @@ app.post("/urls/:shortURL", (req, res) => {
     urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
     res.redirect("/urls");
   } else {
-    res.statusCode = 401;
-    return res.send('Error ' + res.statusCode);
+    res.statusCode = 401
+    res.cookie('errorLog', 401)
+    res.redirect("/error")
   }
 });
 
 //log the post request to the console.
 app.post("/urls", (req, res) => {
   let temp = genRandomString();
-  //console.log(req.body.longURL.slice(0,7))
   if(!(req.body.longURL.slice(0,7) === 'http://')){
-    let format = 'http://'
+    const format = 'http://'
     req.body.longURL = format.concat(req.body.longURL);
   }
   urlDatabase[temp] = {
     longURL: req.body.longURL,
     userID: req.cookies["user_id"]
   };
-  //adding viewcount
   viewCount[temp] = 0;
-  //end
+  console.log(urlDatabase, users)
   res.redirect(`/urls/${temp}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   req.params;
+  console.log(req.cookies["user_id"], urlDatabase[req.params.shortURL], req.params)
   if (req.cookies["user_id"] === urlDatabase[req.params.shortURL]["userID"]) {
     //console.log("Delete This: ", req.params);
     delete urlDatabase[req.params.shortURL];
     res.redirect('/urls');
-  } else {
-    res.statusCode = 401;
-    return res.send('Error ' + res.statusCode);
+  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortURL]["userID"]){
+    res.statusCode = 401
+    res.cookie('errorLog', res.statusCode)
+    res.redirect("/error")
   }
 });
 
