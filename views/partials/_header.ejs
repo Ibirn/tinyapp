@@ -16,7 +16,7 @@
     <a class="nav-item nav-link" style="color: #5a789c" href="/login">Login</a>
     <a class="nav-item nav-link" style="color: #5a789c" href="/register">Register</a>
     <% } else { %>
-    <p style="margin: 1em"> <%= user["email"] %> </p>
+    <p style="margin: 1em;"> <%= user["email"] %> </p>
     <form method="POST" action="/logout"><button type="submit " class="btn btn-sm"
         style="background-color: #5d7ca3; color: #FFFFFF;">Logout</button></form>
     <% } %>
