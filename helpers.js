@@ -6,9 +6,10 @@ const genRandomString = (database) => {
   for (let i = 0; i < 6; i++) {
     let temp = characters[Math.floor(Math.random() * 62)];
     if (database[temp]) {
-      i--
+      i--;
     } else {
-    output += temp}
+      output += temp;
+    }
   }
   return output;
 };
@@ -48,4 +49,4 @@ module.exports = {
   getID,
   genRandomString,
   checkInUse
-}
+};
