@@ -17,7 +17,8 @@
     <div class="card-body">
       <h5 class="card-title"> TinyURL for: <%= longURL %></a></h5>
       <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">localhost:8080/u/<%= shortURL %></a></p>
-      <p style="font-size: smaller;">TinyURL created on: <%= date %> <%= date.toLocaleTimeString() %></p>
+      <% const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; %>
+      <p style="font-size: smaller;">TinyURL created on: <%= date.toDateString() %> </p>
     </div>
 
   </div>
