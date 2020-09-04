@@ -15,8 +15,9 @@
   <div class="card text-center">
     <div class="card-header"></div>
     <div class="card-body">
-      <h5 class="card-title"> TinyURL for: <a href="<%= longURL %>"><%= longURL %></a></h5>
-      <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+      <h5 class="card-title"> TinyURL for: <%= longURL %></a></h5>
+      <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">localhost:8080/u/<%= shortURL %></a></p>
+      <p style="font-size: smaller;">TinyURL created on: <%= date %> <%= date.toLocaleTimeString() %></p>
     </div>
 
   </div>
